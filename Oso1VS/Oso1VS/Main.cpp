@@ -3,17 +3,24 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <sstream>
 using namespace std;
 
-vector<string> retrieveData(string fileName);
+struct processStep
+{
+	string Command;
+	int Time;
+};
+
+void retrieveData(string fileName);
 void parseFileData(vector<string> fileData);
 
 void main()
 {
 	string _fileName = "input1.txt.txt";
-	vector<string> _fileData = retrieveData(_fileName);
+	retrieveData(_fileName);
 
-	parseFileData(_fileData);
+	//parseFileData(_fileData);
 
 
 	//test to print contents
@@ -36,11 +43,14 @@ void parseFileData(vector<string> fileData)
 	
 	cout << counter;
 }
-vector<string> retrieveData(string fileName)
+void retrieveData(string fileName)
 {
-	vector<string> fileContents;
+	//vector<string> fileContents;
 	string temp;
+	stringstream _DATA;
 	ifstream inputTxt;
+	processStep *priori = new processStep[3];
+
 	inputTxt.open(fileName);
 
 	if (!inputTxt.is_open())
@@ -48,30 +58,39 @@ vector<string> retrieveData(string fileName)
 		cout<<"Failed to Open File";
 	}
 
-	fileContents.begin();
+	//fileContents.begin();
+
+	
 
 	//Getting contents from the file stored into the vector
 	while (!inputTxt.eof())
 	{
 		getline(inputTxt, temp);
-		fileContents.push_back(temp);
+		_DATA.str("");
+		_DATA.clear();
+
+		_DATA << temp;
+		string command;
+		_DATA >> command;
+		int time;
+		_DATA >> time;
+		
+		//this is to test _DATA
+		//cout << command << time<< "\n";
 	}
 	inputTxt.close();
-	fileContents.end();
+	//fileContents.end();
 
-	return fileContents;
 }
 
-class Process
+/*class Process
 {
-private:
-	vector<string> priori;
 public:
+	processStep priori;
 	int _timer;
+
 	void addProcess(string line)
 	{
-		priori.begin();
-		priori.push_back(line);
-		priori.end();
+
 	}
-};
+};*/
