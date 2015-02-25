@@ -6,25 +6,36 @@
 using namespace std;
 
 vector<string> retrieveData(string fileName);
+void parseFileData(vector<string> fileData);
 
 void main()
 {
-	string fileName = "input1.txt.txt";
-	vector<string> fileData = retrieveData(fileName);
+	string _fileName = "input1.txt.txt";
+	vector<string> _fileData = retrieveData(_fileName);
 
-
+	parseFileData(_fileData);
 
 
 	//test to print contents
+	/*
 	for (vector<string>::const_iterator i = fileData.begin(); i != fileData.end(); ++i)
 	{
 		cout << *i << '\n';
 	}
-	
+	*/
 
 	system("pause");
 }
-
+void parseFileData(vector<string> fileData)
+{
+	int counter = 0;
+	if (find(fileData.begin(), fileData.end(), "NEW") != fileData.end())
+	{
+		counter++;
+	}
+	
+	cout << counter;
+}
 vector<string> retrieveData(string fileName)
 {
 	vector<string> fileContents;
