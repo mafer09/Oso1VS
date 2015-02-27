@@ -14,27 +14,49 @@ struct ProcessStep
 class Process
 {
 public:
-	ProcessStep priori;
-	int _timer;
-	//void addProcess(string line);
+	vector<ProcessStep> _Priori;
+	int _Timer;
+	int _Name;
+
+	Process();
+	void addProcessStep(ProcessStep data);
+	void addName(int name);
+	void updateTimer(int time);
+	void setTimer(int time);
 
 
 };
-
-/*void Process::addProcess(ProcessStep )
+Process::Process()
 {
+	_Timer = 0;
+	_Name = 0;
+}
+void Process::addProcessStep(ProcessStep data)
+{
+	_Priori.push_back(data);
+}
+void Process::addName(int name)
+{
+	_Name = name;
+}
+void Process::updateTimer(int time)
+{
+	_Timer += time;
+}
+void Process::setTimer(int time)
+{
+	_Timer = time;
+}
 
-}*/
-
-vector<ProcessStep> retrieveData(string fileName)
+vector<ProcessStep> retrieveData()
 {
 	vector<ProcessStep> fileContents;
 	string temp;
 	stringstream _DATA;
 	ifstream inputTxt;
-	ProcessStep priori;
+	ProcessStep line;
 
-	inputTxt.open(fileName);
+	inputTxt.open("input1.txt.txt");
 
 	if (!inputTxt.is_open())
 	{
@@ -49,10 +71,10 @@ vector<ProcessStep> retrieveData(string fileName)
 		_DATA.clear();
 		_DATA << temp;
 
-		_DATA >> priori.Command;
-		_DATA >> priori.Time;
+		_DATA >> line.Command;
+		_DATA >> line.Time;
 
-		fileContents.push_back(priori);
+		fileContents.push_back(line);
 	}
 	inputTxt.close();
 
@@ -62,13 +84,29 @@ vector<ProcessStep> retrieveData(string fileName)
 
 int main()
 {
-	string _fileName = "input1.txt.txt";
-	vector<ProcessStep> trial = retrieveData(_fileName);
+	vector<ProcessStep> fileContents= retrieveData();
 
+	//Parses the data
+	int processNumber = -1;
+	Process allProcesses[10]; //**MAY NEED TO BE CHANGED
 
+	for (int i = 0; i < fileContents.size(); i++)
+	{
+		// only if its NEW
+		if (fileContents[i].Command == "NEW")
+		{
+			processNumber++;
+			allProcesses[processNumber].addName(fileContents[i].Time);
+		}
+		// only if its START
+		else if (fileContents[i].Command == "START")
+		{
+			allProcesses[processNumber].setTimer(fileContents[i].Time);
+		}
 
-	//parseFileData(_fileData);
-
+		// everyone else
+		allProcesses[processNumber].addProcessStep(fileContents[i]);
+	}
 
 	//test to print contents
 	
@@ -76,9 +114,8 @@ int main()
 	{
 		cout << trial[i].Command<<" "<<trial[i].Time << '\n';
 	}*/
-	
 
-	system("pause"); //TAKE SYSTEM PAUSE OUT!
+	system("pause"); //**TAKE SYSTEM PAUSE OUT!
 	return 0;
 }
 
