@@ -18,8 +18,7 @@ class System
 public:
 	bool CPU1, CPU2, CPU3, CPU4, DISK, INPUT; // Cores: 1-4 Disk 5: Input:6
 	queue<ProcessStep> ReadyQueue, DiskQueue, InputQueue;
-	//double AVGBusyCores;
-	int CurrentTime;
+	double AVGBusyCores;
 
 	System();
 	void busyComponent(int component);
@@ -28,8 +27,7 @@ public:
 System::System()
 {
 	CPU1, CPU2, CPU3, CPU4, DISK, INPUT = false;
-	//AVGBusyCores = 0.0;
-	CurrentTime = 0;
+	AVGBusyCores = 0.0;
 }
 void System::busyComponent(int component)
 {
@@ -92,7 +90,6 @@ public:
 
 	int _Name;
 	vector<ProcessStep> _Priori;
-	int _currentPriori;
 	int _Start;
 	int _Timer;
 	string _Status; /// 1: Running, 2: Waiting, 0: Terminated
@@ -115,7 +112,6 @@ Process::Process()
 	_Status = "";
 	_CPUtime = 0;
 	_Start = 0;
-	_currentPriori = 0;
 }
 void Process::addProcessStep(ProcessStep data)
 {
@@ -189,28 +185,16 @@ vector<ProcessStep> retrieveData()
 
 	return fileContents;
 };
-/*void execute(int processName, int totalProcesses, Process processTable[])
-{
-	for (int i = 0; i <= totalProcesses; i++)
-	{
-		if (processTable[i]._Start < minimumTime)
-		{
-			minimumTime = processTable[i]._Start;
-			nextProcess = processTable[i]._Name;
-		}
-	}
-	int numberProcess = 0;
-	if (processName == processTable[numberProcess]._Name && numberProcess != totalProcesses)
-}*/
+
 
 int main()
 {
 	int processNumber = -1;
 	Process processTable[10]; //**MAY NEED TO BE CHANGED
 	vector<ProcessStep> fileContents = retrieveData();
-	//int currentTime = 0;
+	int currentTime = 0;
 	int minimumTime = -1;
-	int nextProcess = 0;
+	string nextProcess = "";
 
 	///Parses the data == Creates proceess table
 	for (int i = 0; i < fileContents.size(); i++)
@@ -243,7 +227,6 @@ int main()
 		}
 	}
 
-	//execute(nextProcess, processNumber, processTable);
 
 	system("pause"); //**TAKE SYSTEM PAUSE OUT!
 	return 0;
