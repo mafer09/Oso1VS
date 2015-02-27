@@ -6,61 +6,40 @@
 #include <sstream>
 using namespace std;
 
-struct processStep
+struct ProcessStep
 {
 	string Command;
 	int Time;
 };
-
-void retrieveData(string fileName);
-void parseFileData(vector<string> fileData);
-
-void main()
+class Process
 {
-	string _fileName = "input1.txt.txt";
-	retrieveData(_fileName);
+public:
+	ProcessStep priori;
+	int _timer;
+	//void addProcess(string line);
 
-	//parseFileData(_fileData);
 
+};
 
-	//test to print contents
-	/*
-	for (vector<string>::const_iterator i = fileData.begin(); i != fileData.end(); ++i)
-	{
-		cout << *i << '\n';
-	}
-	*/
-
-	system("pause");
-}
-void parseFileData(vector<string> fileData)
+/*void Process::addProcess(ProcessStep )
 {
-	int counter = 0;
-	if (find(fileData.begin(), fileData.end(), "NEW") != fileData.end())
-	{
-		counter++;
-	}
-	
-	cout << counter;
-}
-void retrieveData(string fileName)
+
+}*/
+
+vector<ProcessStep> retrieveData(string fileName)
 {
-	//vector<string> fileContents;
+	vector<ProcessStep> fileContents;
 	string temp;
 	stringstream _DATA;
 	ifstream inputTxt;
-	processStep *priori = new processStep[3];
+	ProcessStep priori;
 
 	inputTxt.open(fileName);
 
 	if (!inputTxt.is_open())
 	{
-		cout<<"Failed to Open File";
+		cout << "Failed to Open File";
 	}
-
-	//fileContents.begin();
-
-	
 
 	//Getting contents from the file stored into the vector
 	while (!inputTxt.eof())
@@ -68,29 +47,39 @@ void retrieveData(string fileName)
 		getline(inputTxt, temp);
 		_DATA.str("");
 		_DATA.clear();
-
 		_DATA << temp;
-		string command;
-		_DATA >> command;
-		int time;
-		_DATA >> time;
-		
-		//this is to test _DATA
-		//cout << command << time<< "\n";
+
+		_DATA >> priori.Command;
+		_DATA >> priori.Time;
+
+		fileContents.push_back(priori);
 	}
 	inputTxt.close();
-	//fileContents.end();
 
+	return fileContents;
+};
+
+
+int main()
+{
+	string _fileName = "input1.txt.txt";
+	vector<ProcessStep> trial = retrieveData(_fileName);
+
+
+
+	//parseFileData(_fileData);
+
+
+	//test to print contents
+	
+	/*for (int i = 0; i< 10; ++i)
+	{
+		cout << trial[i].Command<<" "<<trial[i].Time << '\n';
+	}*/
+	
+
+	system("pause"); //TAKE SYSTEM PAUSE OUT!
+	return 0;
 }
 
-/*class Process
-{
-public:
-	processStep priori;
-	int _timer;
 
-	void addProcess(string line)
-	{
-
-	}
-};*/
