@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <queue>
 using namespace std;
 
 struct ProcessStep
@@ -11,18 +12,96 @@ struct ProcessStep
 	string Command;
 	int Time;
 };
+
+class System
+{
+public:
+	bool CPU1, CPU2, CPU3, CPU4, DISK, INPUT; // Cores: 1-4 Disk 5: Input:6
+	queue<ProcessStep> ReadyQueue, DiskQueue, InputQueue;
+	double AVGBusyCores;
+
+	System();
+	void busyComponent(int component);
+	void idleComponent(int component);
+};
+System::System()
+{
+	CPU1, CPU2, CPU3, CPU4, DISK, INPUT = false;
+	AVGBusyCores = 0.0;
+}
+void System::busyComponent(int component)
+{
+	switch (component)
+	{
+	case 1:
+		CPU1 = true;
+		break;
+	case 2:
+		CPU2 = true;
+		break;
+	case 3:
+		CPU3 = true;
+		break;
+	case 4:
+		CPU4 = true;
+		break;
+	case 5:
+		DISK = true;
+		break;
+	case 6:
+		INPUT = true;
+		break;
+	default:
+		cout << "Error: Check busyComponent function";
+		break;
+	}
+}
+void System::idleComponent(int component)
+{
+	switch (component)
+	{
+	case 1:
+		CPU1 = false;
+		break;
+	case 2:
+		CPU2 = false;
+		break;
+	case 3:
+		CPU3 = false;
+		break;
+	case 4:
+		CPU4 = false;
+		break;
+	case 5:
+		DISK = false;
+		break;
+	case 6:
+		INPUT = false;
+		break;
+	default:
+		cout << "Error: Check idleComponent function";
+		break;
+	}
+}
+
 class Process
 {
 public:
-	vector<ProcessStep> _Priori;
-	int _Timer;
-	int _Name;
 
+	int _Name;
+	vector<ProcessStep> _Priori;
+	int _Start;
+	int _Timer;
+	string _Status; /// 1: Running, 2: Waiting, 0: Terminated
+	int _CPUtime;
+	
 	Process();
 	void addProcessStep(ProcessStep data);
 	void addName(int name);
 	void updateTimer(int time);
 	void setTimer(int time);
+	void updateCPUtime(int time);
+	void updateStatus(int status);
 
 
 };
@@ -30,6 +109,9 @@ Process::Process()
 {
 	_Timer = 0;
 	_Name = 0;
+	_Status = "";
+	_CPUtime = 0;
+	_Start = 0;
 }
 void Process::addProcessStep(ProcessStep data)
 {
@@ -45,7 +127,30 @@ void Process::updateTimer(int time)
 }
 void Process::setTimer(int time)
 {
+	_Start = time;
 	_Timer = time;
+}
+void Process::updateCPUtime(int time)
+{
+	_CPUtime += time;
+}
+void Process::updateStatus(int status)
+{
+	switch (status)
+	{
+	case 0:
+		_Status = "Terminated";
+		break;
+	case 1:
+		_Status = "Running";
+		break;
+	case 2:
+		_Status = "Waiting";
+		break;
+	default:
+		cout << "Error: Check updateStatus function";
+		break;
+	}
 }
 
 vector<ProcessStep> retrieveData()
@@ -84,36 +189,44 @@ vector<ProcessStep> retrieveData()
 
 int main()
 {
-	vector<ProcessStep> fileContents= retrieveData();
-
-	//Parses the data
 	int processNumber = -1;
-	Process allProcesses[10]; //**MAY NEED TO BE CHANGED
+	Process processTable[10]; //**MAY NEED TO BE CHANGED
+	vector<ProcessStep> fileContents = retrieveData();
+	int currentTime = 0;
+	int minimumTime = -1;
+	string nextProcess = "";
 
+	///Parses the data == Creates proceess table
 	for (int i = 0; i < fileContents.size(); i++)
 	{
-		// only if its NEW
+		/// only if its NEW
 		if (fileContents[i].Command == "NEW")
 		{
 			processNumber++;
-			allProcesses[processNumber].addName(fileContents[i].Time);
+			processTable[processNumber].addName(fileContents[i].Time);
 		}
-		// only if its START
+		/// only if its START
 		else if (fileContents[i].Command == "START")
 		{
-			allProcesses[processNumber].setTimer(fileContents[i].Time);
+			processTable[processNumber].setTimer(fileContents[i].Time);
 		}
-
-		// everyone else
-		allProcesses[processNumber].addProcessStep(fileContents[i]);
+		/// everyone else
+		else		
+		{
+			processTable[processNumber].addProcessStep(fileContents[i]);
+		}
 	}
 
-	//test to print contents
-	
-	/*for (int i = 0; i< 10; ++i)
+	/// Check who begins
+	for (int i = 0; i <= processNumber; i++)
 	{
-		cout << trial[i].Command<<" "<<trial[i].Time << '\n';
-	}*/
+		if (processTable[i]._Start < minimumTime)
+		{
+			minimumTime = processTable[i]._Start;
+			nextProcess = processTable[i]._Name;
+		}
+	}
+
 
 	system("pause"); //**TAKE SYSTEM PAUSE OUT!
 	return 0;
