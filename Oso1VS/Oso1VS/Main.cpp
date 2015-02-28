@@ -22,7 +22,7 @@ public:
 	int _currentPriori;
 	int _Start;
 	int _Timer;
-	string _Status; /// 1: Running, 2: Waiting, 0: Terminated
+	string _Status; /// 1: Running, 2: Waiting, 0: Terminated 3:Ready
 	int _CPUtime;
 	
 	Process();
@@ -33,7 +33,7 @@ public:
 	void updateCPUtime(int time);
 	void updateStatus(int status);
 	void updateCurrentPriori(int time);
-
+	string getStatus();
 
 };
 Process::Process()
@@ -89,11 +89,14 @@ void Process::updateStatus(int status)
 }
 void Process::updateCurrentPriori(int time)
 {
-	_currentPriori = time;
+	_currentPriori += time;
+}
+string Process::getStatus()
+{
+	return _Status;
 }
 
 //SYSTEM Functions
-
 int checkCoreAvailability( bool Cores[], int CoresAvailability[])
 {
 	vector<int> freeCores;
@@ -139,7 +142,7 @@ int checkComponentAvailability(bool component)
 };
 string determineState(bool state)
 {
-	if (state)
+	if (state == true)
 	{
 		return "BUSY";
 	}
@@ -148,6 +151,7 @@ string determineState(bool state)
 		return "IDLE";
 	}
 };
+
 
 vector<ProcessStep> retrieveData()
 {
@@ -197,24 +201,37 @@ int findLowestExecutionTime(int totalProcesses, Process processTable[])
 	}
 	return nextProcessLocation;
 };
-
-/*void printReport(int currentProcessPosition, int totalProcesses, Process processTable[])
+bool isProcessTerminated(Process processTable[],int currentProcess)
 {
-	int num = 1;
+	if (processTable[currentProcess].getStatus() == "Terminated")
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+};
+void printReport(int currentProcessPosition, int totalProcesses, Process processTable[], bool Cores[], int CoresAvailability[], 
+	bool DI[], int DIAvailability[], queue<ProcessStep> ReadyQ, queue<ProcessStep> DiskQ, queue<ProcessStep> InputQ)
+{
+	int coreNumber = 1;
+	int totalCores = 0;
+
 	cout << "Process " << processTable[currentProcessPosition]._Name
 		<< " terminates at t=" << processTable[currentProcessPosition]._Timer << "\n";
-	for (int i = 1; i < 5; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		cout << "Core " << num << " is " << components.determineState(components.getComponentState(i)) << "\n";
-		num++;
+		cout << "Core " << coreNumber << " is " << determineState(Cores[i])<< "\n";
+		coreNumber++;
 	}
-	cout << "Disk is " << components.determineState(components.getComponentState(5)) << "\n";
-	cout << "Input is " << components.determineState(components.getComponentState(6)) << "\n";
+	cout << "Disk is " << determineState(DI[0]) << "\n";
+	cout << "Input is " << determineState(DI[1]) << "\n";
 	//ADD WHAT IT CONTAINS!!
 	/*cout << "Ready Queue contains: " << components.determineState(components.ReadyQueue.empty()) << "\n";
 	cout << "Disk Queue contains: " << components.determineState(components.DiskQueue.empty()) << "\n";
 	cout << "Input Queue contains: " << components.determineState(components.InputQueue.empty()) << "\n\n";
-
+	*/
 	cout << "Process ID  | Start Time | CPU Time   |  Status" << "\n";
 	for (int i = 0; i <= totalProcesses; i++)
 	{
@@ -223,96 +240,136 @@ int findLowestExecutionTime(int totalProcesses, Process processTable[])
 			cout << processTable[i]._Name << "  |  " << processTable[i]._Start << "  |  " <<
 				processTable[i]._CPUtime << "   |  " << processTable[i]._Status << "\n";
 		}
-		components.updateTotalCores(processTable[i]._CPUtime);
+		totalCores += processTable[i]._CPUtime;
 	}
-	cout << "Average number of BUSY Cores: " << components.getTotalCores() / processTable[currentProcessPosition]._Timer << "\n";
-	components.resetTotalCores();
-};*/
-void executeProcess(int processLocation, Process processTable[], int totalProcesses, bool Cores[], int CoresAvailability[], bool Disk, int DiskAvailability, bool Input, int InputAvailability)
+	cout << "Average number of BUSY Cores: " << totalCores / processTable[currentProcessPosition]._Timer << "\n";
+};
+void executeProcess(int processLocation, Process processTable[], int totalProcesses, 
+	bool Cores[], int CoresAvailability[], bool DI[], int DIAvailability[], queue<ProcessStep> ReadyQ, queue<ProcessStep> DiskQ, queue<ProcessStep> InputQ)
 {
 	int availableResult = -1;
 	int executionTime = -1;
+	int totalLines = processTable[processLocation]._Priori.size();
+	totalLines--;
 	int prioriPosition = processTable[processLocation]._currentPriori; // get the next step to process from the priori
+	string component = processTable[processLocation]._Priori[prioriPosition].Command; // get the next component to be used 
+	ProcessStep temporaryStep;
 
-	if (prioriPosition == (processTable[processLocation]._Priori.size())-1 ) // check that the process hasnt terminated
+	if (component == "CPU")
 	{
-		processTable[processLocation].updateStatus(0);
-		//printReport(processLocation, totalProcesses, processTable);
-	}
-	else
-	{
-		string component = processTable[processLocation]._Priori[prioriPosition].Command; // get the next component to be used 
-
-		if (component == "CPU")
+		availableResult = checkCoreAvailability(Cores, CoresAvailability); // check for free cores
+		if (availableResult == -3) //All cores are busy
 		{
-			availableResult = checkCoreAvailability(Cores, CoresAvailability); // check for free cores
-			if (availableResult == -3) //All cores are busy
-			{
-				//laptop.ReadyQueue.push(processTable[processLocation]._Priori[prioriPosition]); //place process in the ready queue
-				processTable[processLocation].updateStatus(3);	//update status of the process to ready
-				// check when next is free FUNCTION
-				//FIX READY QUEUES
-			}
-			// a core is idle
-			else
-			{
-				executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
-
-				Cores[availableResult] = true;
-				CoresAvailability[availableResult] += executionTime;  //make the idle core busy and place how long it would be unavailable
-				processTable[processLocation].updateStatus(1); // update status of the process to running
-				processTable[processLocation].updateCPUtime(executionTime); // add onto time in cpu
-				processTable[processLocation].updateTimer(executionTime); // add onto process timer
-
-			}
+			processTable[processLocation].updateStatus(3);	//update status of the process to ready
+			ReadyQ.push(processTable[processLocation]._Priori[prioriPosition]); //place process in the ready queue
+			//processTable[processLocation].setTimer();
+				
+				
+			// check when next is free FUNCTION
+			//FIX READY QUEUES
 		}
-		else if (component == "I/O")
+		else // a Core is idle
 		{
-			availableResult = checkComponentAvailability(Disk);
-			processTable[processLocation].updateStatus(2);
-			if (availableResult == -3)
-			{
-				//laptop.DiskQueue.push(processTable[processLocation]._Priori[prioriPosition]);
-				// check when next is free FUNCTION
-				// FIX THIS!
-			}
-			else
-			{
-				executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
-				if (executionTime == 0)
-				{
-					//DO EVERYTHING AGAIN (go back to cpu)
-				}
-				else
-				{
-					Disk = true;
-					DiskAvailability += executionTime;	//make disk busy and how long
-					processTable[processLocation].updateTimer(executionTime); // add onto process timer
-				}
-			}
+			executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
+
+			Cores[availableResult] = true;
+			CoresAvailability[availableResult] += executionTime;  //make the idle core busy and place how long it would be unavailable
+			processTable[processLocation].updateStatus(1); // update status of the process to running
+			processTable[processLocation].updateCPUtime(executionTime); // add onto time in cpu
+			processTable[processLocation].updateTimer(executionTime); // add onto process timer
+
+		}
+	}
+	else if (component == "I/O")
+	{
+		availableResult = checkComponentAvailability(DI[0]); // check if component is free or busy
+		processTable[processLocation].updateStatus(2); // update status to waiting
+		executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
+
+		if (availableResult == -3) // component is busy
+		{
+			processTable[processLocation].setTimer(DIAvailability[0]);
+			DiskQ.push(processTable[processLocation]._Priori[prioriPosition]);
+			
+		}
+		else //component is free
+		{
+			DI[0] = true;
+			DIAvailability[0] += executionTime;	//make disk busy and how long
+			processTable[processLocation].updateTimer(executionTime); // add onto process timer
+
+		}
+	}
+	else if (component == "INPUT")
+	{
+		availableResult = checkComponentAvailability(DI[1]);
+		processTable[processLocation].updateStatus(2);
+		if (availableResult == -3)
+		{
+			processTable[processLocation].setTimer(DIAvailability[1]);
+			temporaryStep = processTable[processLocation]._Priori[prioriPosition];
+			InputQ.push(temporaryStep);
+			processTable[processLocation]._Priori[prioriPosition].Command = "DiskQueue";
+			
 		}
 		else
 		{
-			availableResult = checkComponentAvailability(Input);
-			processTable[processLocation].updateStatus(2);
-			if (availableResult == -3)
-			{
-				//laptop.InputQueue.push(processTable[processLocation]._Priori[prioriPosition]);
-				// check when next is Free FUNCTION
-				//FIX THIS!
-			}
-			else
-			{
-				executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
-				Input = true; // make input busy and how long
-				InputAvailability += executionTime;
-				processTable[processLocation].updateTimer(executionTime);
-			}
+			executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
+			DI[1] = true; // make input busy and how long
+			DIAvailability[1] += executionTime;
+			processTable[processLocation].updateTimer(executionTime);
+		}
+	}
+	else if (component == "ReadyQueue")
+	{
+		if (ReadyQ.empty() == false)
+		{
+			temporaryStep = ReadyQ.front();
+			ReadyQ.pop();
 		}
 
-		processTable[processLocation].updateCurrentPriori(prioriPosition++);
 	}
+	else if (component == "DiskQueue")
+	{
+		if (DiskQ.empty() == false)
+		{
+			temporaryStep = DiskQ.front();
+			DiskQ.pop();
+
+			processTable[processLocation].updateStatus(2); // update status to waiting
+			executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
+			DI[0] = true;
+			DIAvailability[0] += executionTime;	//make disk busy and how long
+			processTable[processLocation].updateTimer(executionTime); // add onto process timer
+		}
+	}
+	else if (component == "InputQueue")
+	{
+		if (InputQ.empty() == false)
+		{
+			temporaryStep = InputQ.front();
+			InputQ.pop();
+
+			processTable[processLocation].updateStatus(2);
+			executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
+			DI[1] = true; // make input busy and how long
+			DIAvailability[1] += executionTime;
+			processTable[processLocation].updateTimer(executionTime);
+		}
+	}
+	else 
+	{
+		cout << "Error: executeProcess function";
+	}
+	processTable[processLocation].updateCurrentPriori(1);
+
+	if (prioriPosition == totalLines) // check that the process hasnt terminated
+	{
+		processTable[processLocation].updateStatus(0);
+	}
+
 };
+
 
 int main()
 {
@@ -325,16 +382,12 @@ int main()
 	
 	//SYSTEM Components
 	bool Cores[4] = { false }; //false = idle || true = busy
-	bool DISK = false;
-	bool INPUT = false; // Cores: 1-4 Disk 5: Input:6
+	bool DandI[2] = { false }; //0: disk 1: input
 	int CoresAvailability[4] = { 0 };
-	int DISK_available = 0;
-	int INPUT_available = 0;
+	int DandIAvailability[2] = { 0 };
 	queue<ProcessStep> ReadyQueue;
 	queue<ProcessStep> DiskQueue;
 	queue<ProcessStep> InputQueue;
-	int totalCores = 0;
-
 
 	///Parses the data == Creates proceess table
 	for (int i = 0; i < fileContents.size(); i++)
@@ -363,8 +416,23 @@ int main()
 	for (int j = 0; j < totalExecutableLines; j++)
 	{
 		nextProcess = findLowestExecutionTime(processNumber, processTable);
-		executeProcess(nextProcess, processTable, processNumber, Cores, CoresAvailability,
-			DISK, DISK_available, INPUT, INPUT_available);
+		
+		int currentPriori = processTable[nextProcess]._currentPriori;
+		if (isProcessTerminated(processTable, nextProcess) == true)
+		{ 
+			printReport(nextProcess, processNumber, processTable, Cores, CoresAvailability, DandI, DandIAvailability,
+				ReadyQueue, DiskQueue, InputQueue);
+		}
+		else
+		{
+			/*if (processTable[nextProcess]._Priori[currentPriori].Command == "I/O" &&
+				processTable[nextProcess]._Priori[currentPriori].Time == 0)// go to the next process
+			{
+				processTable[nextProcess].updateCurrentPriori(1);
+			}*/
+			executeProcess(nextProcess, processTable, processNumber, Cores, CoresAvailability,
+				DandI, DandIAvailability, ReadyQueue, DiskQueue, InputQueue);
+		}
 	}
 
 
