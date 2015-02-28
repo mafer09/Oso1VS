@@ -11,11 +11,6 @@ struct ProcessStep
 {
 	string Command;
 	int Time;
-	int Total;
-	int totalLines()
-	{
-		return Total;
-	}
 };
 
 class System
@@ -39,10 +34,13 @@ public:
 };
 System::System()
 {
-	Cores[4] = { false };
+	Cores[4] = { false};
 	CoresAvailability[4] = { 0 };
-	DISK, INPUT = false;
-	DISK_available, INPUT_available, totalCores = 0;
+	DISK = false;
+	INPUT = false;
+	DISK_available = 0;
+	INPUT_available = 0;
+	totalCores = 0;
 	queue<ProcessStep> ReadyQueue;
 	queue<ProcessStep> DiskQueue;
 	queue<ProcessStep> InputQueue;
@@ -110,7 +108,7 @@ void System::idleComponent(int component)
 }
 int System::coreAvailability()
 {
-	int lowestTime = -1;
+	int lowestTime = 1;
 	for (int i = 0; i < 4; i++)
 	{
 		if (CoresAvailability[i] < lowestTime)
@@ -202,7 +200,11 @@ public:
 };
 Process::Process()
 {
-	_Timer, _Start, _CPUtime, _currentPriori, _Name = 0;
+	_Timer = 0;
+	_Start = 0;
+	_CPUtime = 0;
+	_currentPriori = 0;
+	_Name = 0;
 	_Status = "";
 }
 void Process::addProcessStep(ProcessStep data)
@@ -283,17 +285,16 @@ vector<ProcessStep> retrieveData()
 		numberOfLines++;
 	}
 	inputTxt.close();
-	line.Total = numberOfLines;
 
 	return fileContents;
 };
 int findLowestExecutionTime(int totalProcesses, Process processTable[])
 {
-	int lowestExecutionTime = 1;
+	int lowestExecutionTime = processTable[0]._Timer;
 	int nextProcessLocation = -1;
 	for (int i = 0; i <= totalProcesses; i++)
 	{
-		if (processTable[i]._Timer < lowestExecutionTime)
+		if (processTable[i]._Timer <= lowestExecutionTime)
 		{
 			lowestExecutionTime = processTable[i]._Timer;
 			nextProcessLocation = i;
@@ -301,30 +302,7 @@ int findLowestExecutionTime(int totalProcesses, Process processTable[])
 	}
 	return nextProcessLocation;
 };
-/*int findNext(int totalProcesses, int Command, Process processTable[])
-{
-	int minimumTime = -1;
-	int nextProcessLocation = -1;
 
-	switch (Command)
-	{
-	case 1: 
-		for (int i = 0; i <= totalProcesses; i++)
-		{
-			if (processTable[i]._Start < minimumTime)
-			{
-				minimumTime = processTable[i]._Start;
-				nextProcessLocation = i;
-			}
-		}
-		break;
-	default:
-		cout << "Error in findNext";
-		break;
-	}
-
-	return nextProcessLocation;
-};*/
 void printReport(int currentProcessPosition, int totalProcesses, Process processTable[], System components)
 {
 	int num = 1;
@@ -357,7 +335,8 @@ void printReport(int currentProcessPosition, int totalProcesses, Process process
 };
 void executeProcess(int processLocation, Process processTable[], System laptop, int totalProcesses)
 {
-	int availableResult, executionTime = -1;
+	int availableResult = -1;
+	int executionTime = -1;
 	int prioriPosition = processTable[processLocation]._currentPriori; // get the next step to process from the priori
 
 	if (prioriPosition == (processTable[processLocation]._Priori.size())-1 ) // check that the process hasnt terminated
@@ -371,7 +350,7 @@ void executeProcess(int processLocation, Process processTable[], System laptop, 
 
 		if (component == "CPU")
 		{
-			int availableResult = laptop.coreAvailability(); // check for free cores
+			availableResult = laptop.coreAvailability(); // check for free cores
 			//all cores are busy
 			if (availableResult == -3)
 			{
@@ -443,7 +422,7 @@ int main()
 	int processNumber = -1;
 	Process processTable[10]; //**MAY NEED TO BE CHANGED
 	vector<ProcessStep> fileContents = retrieveData();
-	int minimumTime = -1;
+	int minimumTime = 1;
 	int nextProcess = -1;
 	System laptop;
 
@@ -468,28 +447,34 @@ int main()
 		}
 	}
 
-	/*/// Check who begins
-	for (int i = 0; i <= processNumber; i++)
+	//verify starts the simulation
+	/*for (int i = 0; i <= processNumber; i++)
 	{
 		if (processTable[i]._Start < minimumTime)
 		{
 			minimumTime = processTable[i]._Start;
-			nextProcess = processTable[i]._Name;
+			nextProcess = i;
 		}
-		//Test printed store data
-		
-		/*cout<<processTable[i]._Name<<": \n";
-		for (int j = 0; j < processTable[i]._Priori.size(); j++)
-		{
-			cout << processTable[i]._Priori[j].Command << " " << processTable[i]._Priori[j].Time << "\n";
-		}
-	}*/
+	}
+	executeProcess(nextProcess, processTable, laptop, processNumber);*/
+
 	// simulation
-	for (int i = 0; i < fileContents[0].totalLines(); i++)
+	for (int j = 0; j < fileContents.size(); j++)
 	{
-		executeProcess(findLowestExecutionTime(processNumber, processTable), processTable, laptop, processNumber);
+		nextProcess = findLowestExecutionTime(processNumber, processTable);
+		executeProcess(nextProcess, processTable, laptop, processNumber);
 	}
 
+	/*/// Check who begins
+
+	//Test printed store data
+
+	/*cout<<processTable[i]._Name<<": \n";
+	for (int j = 0; j < processTable[i]._Priori.size(); j++)
+	{
+	cout << processTable[i]._Priori[j].Command << " " << processTable[i]._Priori[j].Time << "\n";
+	}
+	}*/
 
 
 	system("pause"); //**TAKE SYSTEM PAUSE OUT!
