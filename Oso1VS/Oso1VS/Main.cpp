@@ -13,259 +13,6 @@ struct ProcessStep
 	int Time;
 };
 
-class MotherBoard
-{
-public:
-
-	MotherBoard();
-	void setBusyComponent(int component, int time);
-	void setIdleComponent(int component);
-	int checkCoreAvailability();
-	int checkDiskAvailability();
-	int checkInputAvailability();
-	string determineState(bool state);
-	void updateTotalCores(int cores);
-	bool getComponentState(int component);
-	int getComponentUsage(int component);
-	//ADD QUEUE FUNCTIONS
-	int getTotalCores();
-	void resetTotalCores();
-
-private:
-	bool Cores[4]; //false = idle || true = busy
-	bool DISK, INPUT; // Cores: 1-4 Disk 5: Input:6
-	int CoresAvailability[4];
-	int DISK_available, INPUT_available;
-	queue<ProcessStep> ReadyQueue, DiskQueue, InputQueue;
-	int totalCores;
-};
-MotherBoard::MotherBoard()
-{
-	Cores[4] = { false};
-	CoresAvailability[4] = { 0 };
-	DISK = false;
-	INPUT = false;
-	DISK_available = 0;
-	INPUT_available = 0;
-	totalCores = 0;
-	queue<ProcessStep> ReadyQueue;
-	queue<ProcessStep> DiskQueue;
-	queue<ProcessStep> InputQueue;
-}
-void MotherBoard::setBusyComponent(int component, int time)
-{
-	switch (component)
-	{
-	case 1:
-		Cores[0] = true;
-		CoresAvailability[0] += time;
-		break;
-	case 2:
-		Cores[1] = true;
-		CoresAvailability[1] += time;
-		break;
-	case 3:
-		Cores[2] = true;
-		CoresAvailability[2] += time;
-		break;
-	case 4:
-		Cores[3] = true;
-		CoresAvailability[3] += time;
-		break;
-	case 5:
-		DISK = true;
-		DISK_available += time;
-		break;
-	case 6:
-		INPUT = true;
-		INPUT_available += time;
-		break;
-	default:
-		cout << "Error: Check busyComponent function";
-		break;
-	}
-}
-void MotherBoard::setIdleComponent(int component)
-{
-	
-	switch (component)
-	{
-	case 1:
-		Cores[0] = false;
-		break;
-	case 2:
-		Cores[1] = false;
-		break;
-	case 3:
-		Cores[2] = false;
-		break;
-	case 4:
-		Cores[3] = false;
-		break;
-	case 5:
-		DISK = false;
-		break;
-	case 6:
-		INPUT = false;
-		break;
-	default:
-		cout << "Error: Check idleComponent function";
-		break;
-	}
-}
-int MotherBoard::checkCoreAvailability()
-{
-	vector<int> freeCores;
-	int locationOfFreeCore = -1;
-	int lowestTime = 20000;
-	
-	for (int i = 0; i < 4; i++)
-	{
-		if (Cores[i] == false)
-		{
-			freeCores.push_back(i);
-		}
-	}
-	if (freeCores.empty()) // Return if the there are no free cores
-	{
-		return -3;
-	}
-	else
-	{
-		for (int i = 0; i < freeCores.size(); i++)
-		{
-
-			if (CoresAvailability[freeCores[i]] < lowestTime)
-			{
-				lowestTime = CoresAvailability[i];
-				locationOfFreeCore = freeCores[i];
-			}
-		}
-		return locationOfFreeCore + 1;
-	}
-	/*if (!Cores[0] && lowestTime == CoresAvailability[0])
-	{
-		return 1;
-	}
-	else if (!Cores[1] && lowestTime == CoresAvailability[1])
-	{
-		return 2;
-	}
-	else if (!Cores[2] && lowestTime == CoresAvailability[2])
-	{
-		return 3;
-	}
-	else if (!Cores[3] && lowestTime == CoresAvailability[3])
-	{
-		return 4;
-	}
-	else
-	{
-		return -3;
-	}*/
-}
-int MotherBoard::checkDiskAvailability()
-{
-	if (DISK == false)
-	{
-		return 5;
-	}
-	else
-	{
-		return -3;
-	}
-}
-int MotherBoard::checkInputAvailability()
-{
-	if (INPUT == false)
-	{
-		return 6;
-	}
-	else
-	{
-		return -3;
-	}
-}
-string MotherBoard::determineState(bool state)
-{
-	if (state)
-	{
-		return "BUSY";
-	}
-	else
-	{
-		return "IDLE";
-	}
-}
-void MotherBoard::updateTotalCores(int cores)
-{
-	totalCores += cores;
-}
-bool MotherBoard::getComponentState(int component)
-{
-	switch (component)
-	{
-	case 1:
-		return Cores[0];
-		break;
-	case 2:
-		return Cores[1];
-		break;
-	case 3:
-		return Cores[2];
-		break;
-	case 4:
-		return Cores[3];
-		break;
-	case 5:
-		return DISK;
-		break;
-	case 6:
-		return INPUT;
-		break;
-	default:
-		cout << "Error: Check getComponentState function";
-		return 0;
-		break;
-	}
-}
-int MotherBoard::getComponentUsage(int component)
-{
-	switch (component)
-	{
-	case 1:
-		return CoresAvailability[0];
-		break;
-	case 2:
-		return CoresAvailability[1];
-		break;
-	case 3:
-		return CoresAvailability[2];
-		break;
-	case 4:
-		return CoresAvailability[3];
-		break;
-	case 5:
-		return DISK_available;
-		break;
-	case 6:
-		return INPUT_available;
-		break;
-	default:
-		cout << "Error: Check busyComponent function";
-		return -3;
-		break;
-	}
-}
-int MotherBoard::getTotalCores()
-{
-	return totalCores;
-}
-void MotherBoard::resetTotalCores()
-{
-	totalCores = 0;
-}
-
 class Process
 {
 public:
@@ -345,6 +92,63 @@ void Process::updateCurrentPriori(int time)
 	_currentPriori = time;
 }
 
+//SYSTEM Functions
+
+int checkCoreAvailability( bool Cores[], int CoresAvailability[])
+{
+	vector<int> freeCores;
+	int locationOfFreeCore = -1;
+	int lowestTime = 20000;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (Cores[i] == false)
+		{
+			freeCores.push_back(i);
+		}
+	}
+	if (freeCores.empty()) // Return if the there are no free cores
+	{
+		return -3;
+	}
+	else
+	{
+		for (int i = 0; i < freeCores.size(); i++)
+		{
+
+			if (CoresAvailability[freeCores[i]] < lowestTime)
+			{
+				lowestTime = CoresAvailability[i];
+				locationOfFreeCore = freeCores[i];
+			}
+		}
+		return locationOfFreeCore;
+	}
+
+};
+int checkComponentAvailability(bool component)
+{
+	if (component == true)
+	{
+		return -3;
+	}
+	else
+	{
+		return 0;
+	}
+};
+string determineState(bool state)
+{
+	if (state)
+	{
+		return "BUSY";
+	}
+	else
+	{
+		return "IDLE";
+	}
+};
+
 vector<ProcessStep> retrieveData()
 {
 	vector<ProcessStep> fileContents;
@@ -394,7 +198,7 @@ int findLowestExecutionTime(int totalProcesses, Process processTable[])
 	return nextProcessLocation;
 };
 
-void printReport(int currentProcessPosition, int totalProcesses, Process processTable[], MotherBoard components)
+/*void printReport(int currentProcessPosition, int totalProcesses, Process processTable[])
 {
 	int num = 1;
 	cout << "Process " << processTable[currentProcessPosition]._Name
@@ -409,7 +213,7 @@ void printReport(int currentProcessPosition, int totalProcesses, Process process
 	//ADD WHAT IT CONTAINS!!
 	/*cout << "Ready Queue contains: " << components.determineState(components.ReadyQueue.empty()) << "\n";
 	cout << "Disk Queue contains: " << components.determineState(components.DiskQueue.empty()) << "\n";
-	cout << "Input Queue contains: " << components.determineState(components.InputQueue.empty()) << "\n\n";*/
+	cout << "Input Queue contains: " << components.determineState(components.InputQueue.empty()) << "\n\n";
 
 	cout << "Process ID  | Start Time | CPU Time   |  Status" << "\n";
 	for (int i = 0; i <= totalProcesses; i++)
@@ -423,8 +227,8 @@ void printReport(int currentProcessPosition, int totalProcesses, Process process
 	}
 	cout << "Average number of BUSY Cores: " << components.getTotalCores() / processTable[currentProcessPosition]._Timer << "\n";
 	components.resetTotalCores();
-};
-void executeProcess(int processLocation, Process processTable[], MotherBoard laptop, int totalProcesses)
+};*/
+void executeProcess(int processLocation, Process processTable[], int totalProcesses, bool Cores[], int CoresAvailability[], bool Disk, int DiskAvailability, bool Input, int InputAvailability)
 {
 	int availableResult = -1;
 	int executionTime = -1;
@@ -433,7 +237,7 @@ void executeProcess(int processLocation, Process processTable[], MotherBoard lap
 	if (prioriPosition == (processTable[processLocation]._Priori.size())-1 ) // check that the process hasnt terminated
 	{
 		processTable[processLocation].updateStatus(0);
-		printReport(processLocation, totalProcesses, processTable, laptop);
+		//printReport(processLocation, totalProcesses, processTable);
 	}
 	else
 	{
@@ -441,20 +245,21 @@ void executeProcess(int processLocation, Process processTable[], MotherBoard lap
 
 		if (component == "CPU")
 		{
-			availableResult = laptop.checkCoreAvailability(); // check for free cores
-			//all cores are busy
-			if (availableResult == -3)
+			availableResult = checkCoreAvailability(Cores, CoresAvailability); // check for free cores
+			if (availableResult == -3) //All cores are busy
 			{
 				//laptop.ReadyQueue.push(processTable[processLocation]._Priori[prioriPosition]); //place process in the ready queue
 				processTable[processLocation].updateStatus(3);	//update status of the process to ready
 				// check when next is free FUNCTION
+				//FIX READY QUEUES
 			}
 			// a core is idle
 			else
 			{
 				executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
 
-				laptop.setBusyComponent(availableResult, executionTime); //make the idle core busy and place how long it would be unavailable
+				Cores[availableResult] = true;
+				CoresAvailability[availableResult] += executionTime;  //make the idle core busy and place how long it would be unavailable
 				processTable[processLocation].updateStatus(1); // update status of the process to running
 				processTable[processLocation].updateCPUtime(executionTime); // add onto time in cpu
 				processTable[processLocation].updateTimer(executionTime); // add onto process timer
@@ -463,12 +268,13 @@ void executeProcess(int processLocation, Process processTable[], MotherBoard lap
 		}
 		else if (component == "I/O")
 		{
-			availableResult = laptop.checkDiskAvailability();
+			availableResult = checkComponentAvailability(Disk);
 			processTable[processLocation].updateStatus(2);
 			if (availableResult == -3)
 			{
 				//laptop.DiskQueue.push(processTable[processLocation]._Priori[prioriPosition]);
 				// check when next is free FUNCTION
+				// FIX THIS!
 			}
 			else
 			{
@@ -479,43 +285,56 @@ void executeProcess(int processLocation, Process processTable[], MotherBoard lap
 				}
 				else
 				{
-					laptop.setBusyComponent(availableResult, executionTime);  //make disk busy and how long
+					Disk = true;
+					DiskAvailability += executionTime;	//make disk busy and how long
 					processTable[processLocation].updateTimer(executionTime); // add onto process timer
 				}
 			}
 		}
-		else if (component == "INPUT")
+		else
 		{
-			availableResult = laptop.checkInputAvailability();
+			availableResult = checkComponentAvailability(Input);
 			processTable[processLocation].updateStatus(2);
 			if (availableResult == -3)
 			{
 				//laptop.InputQueue.push(processTable[processLocation]._Priori[prioriPosition]);
 				// check when next is Free FUNCTION
+				//FIX THIS!
 			}
 			else
 			{
 				executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
-				laptop.setBusyComponent(availableResult, executionTime); // make input busy and how long
+				Input = true; // make input busy and how long
+				InputAvailability += executionTime;
 				processTable[processLocation].updateTimer(executionTime);
 			}
 		}
-		else
-		{
-			cout << "Error: in execute process function";
-		}
+
 		processTable[processLocation].updateCurrentPriori(prioriPosition++);
 	}
 };
 
 int main()
 {
-	int processNumber = -1;
-	Process processTable[10]; //**MAY NEED TO BE CHANGED
 	vector<ProcessStep> fileContents = retrieveData();
+	Process processTable[10]; //**MAY NEED TO BE CHANGED
+	
+	int processNumber = -1;
 	int totalExecutableLines = 0;
 	int nextProcess = -1;
-	MotherBoard laptop;
+	
+	//SYSTEM Components
+	bool Cores[4] = { false }; //false = idle || true = busy
+	bool DISK = false;
+	bool INPUT = false; // Cores: 1-4 Disk 5: Input:6
+	int CoresAvailability[4] = { 0 };
+	int DISK_available = 0;
+	int INPUT_available = 0;
+	queue<ProcessStep> ReadyQueue;
+	queue<ProcessStep> DiskQueue;
+	queue<ProcessStep> InputQueue;
+	int totalCores = 0;
+
 
 	///Parses the data == Creates proceess table
 	for (int i = 0; i < fileContents.size(); i++)
@@ -544,31 +363,9 @@ int main()
 	for (int j = 0; j < totalExecutableLines; j++)
 	{
 		nextProcess = findLowestExecutionTime(processNumber, processTable);
-		executeProcess(nextProcess, processTable, laptop, processNumber);
+		executeProcess(nextProcess, processTable, processNumber, Cores, CoresAvailability,
+			DISK, DISK_available, INPUT, INPUT_available);
 	}
-
-
-	//verify starts the simulation
-	/*for (int i = 0; i <= processNumber; i++)
-	{
-	if (processTable[i]._Start < minimumTime)
-	{
-	minimumTime = processTable[i]._Start;
-	nextProcess = i;
-	}
-	}
-	executeProcess(nextProcess, processTable, laptop, processNumber);*/
-
-	/*/// Check who begins
-
-	//Test printed store data
-
-	/*cout<<processTable[i]._Name<<": \n";
-	for (int j = 0; j < processTable[i]._Priori.size(); j++)
-	{
-	cout << processTable[i]._Priori[j].Command << " " << processTable[i]._Priori[j].Time << "\n";
-	}
-	}*/
 
 
 	system("pause"); //**TAKE SYSTEM PAUSE OUT!
