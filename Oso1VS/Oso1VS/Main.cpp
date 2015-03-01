@@ -242,19 +242,39 @@ void terminatedReplications(int numberOfProcesses, Process processTable[], int t
 	}
 };
 
-int findNextCommand(int numberOfProcesses, Process processTable[])
+//int processesLeft
+
+int findNextCommand(int numberOfProcesses, Process processTable[], int processesLeft[])
 {
 	int minimumTime = 20000;
 	int processPosition = -1;
+	int processesLeftCounter = 0;
+	int lastProcess = -1;
 
-	for (int i = 0; i <= numberOfProcesses; i++)
+	for (int i = 0; i < 10; i++)
 	{
-		if (processTable[i].isCommandComplete == true && processTable[i]._Status != "Terminated")
+		if (processesLeft[i] != 99)
 		{
-			if (processTable[i]._Timer < minimumTime)
+			processesLeftCounter++;
+			lastProcess = processesLeft[i];
+		}
+	}
+
+	if (processesLeftCounter == 1)
+	{
+		processPosition = lastProcess;
+	}
+	else
+	{
+		for (int i = 0; i <= numberOfProcesses; i++)
+		{
+			if (processTable[i].isCommandComplete == true && processTable[i]._Status != "Terminated")
 			{
-				minimumTime = processTable[i]._Timer;
-				processPosition = i;
+				if (processTable[i]._Timer < minimumTime)
+				{
+					minimumTime = processTable[i]._Timer;
+					processPosition = i;
+				}
 			}
 		}
 	}
@@ -345,14 +365,14 @@ void printReport(Process terminatedProcess, Process processTable[], int totalPro
 	//cout << "Input Queue contains: " << components.determineState(components.InputQueue.empty()) << "\n\n";
 
 	cout << "Process ID|Start Time|CPU Time|Status" << "\n";
-	cout << terminatedProcess._Name << "  |  " << terminatedProcess._Start << "  |  " <<
+	cout << terminatedProcess._Name << "        |  " << terminatedProcess._Start << "  |  " <<
 		terminatedProcess._CPUtime << "  |  " << terminatedProcess._Status << endl;
 
 	for (int i = 0; i <= totalProcesses; i++)
 	{
 		if (processTable[i]._Name != terminatedProcess._Name && processTable[i]._Status != "Terminated")
 		{
-			cout << processTable[i]._Name << "  |  " << processTable[i]._Start << "  |  " <<
+			cout << processTable[i]._Name << "        |  " << processTable[i]._Start << "  |  " <<
 				processTable[i]._CPUtime << "  |  " << processTable[i]._Status << endl;
 		}
 		totalCPUTime += processTable[i]._CPUtime;
@@ -361,7 +381,7 @@ void printReport(Process terminatedProcess, Process processTable[], int totalPro
 	cout << "Average number of BUSY Cores: " << totalCPUTime / terminatedProcess._Timer <<endl<<endl;
 };
 
-void completedProcess(int numberOfPRocesses, Process processTable[], bool systemComponents[], int systemComponentAvailability[], const queue<ProcessStep>& ReadyQueue, const queue<ProcessStep>& DiskQueue, queue<ProcessStep>& InputQueue)
+void completedProcess(int numberOfPRocesses, Process processTable[], bool systemComponents[], int systemComponentAvailability[], const queue<ProcessStep>& ReadyQueue, const queue<ProcessStep>& DiskQueue, queue<ProcessStep>& InputQueue, int processesLeft[])
 {
 	int lowestExecutionTime = processTable[0]._Timer;
 	int lowestProcessLocation = -1;
@@ -430,6 +450,7 @@ void completedProcess(int numberOfPRocesses, Process processTable[], bool system
 			processTable[lowestProcessLocation].setStatus(0);
 			printReport(processTable[lowestProcessLocation], processTable, numberOfPRocesses, systemComponents, systemComponentAvailability);
 			cout << "completed process was " << lowestProcessLocation<<endl;
+			processesLeft[lowestProcessLocation] = 99;
 			terminatedReplications(numberOfPRocesses, processTable, lowestProcessLocation, systemComponents);
 		}
 
@@ -458,6 +479,13 @@ int main()
 	queue<ProcessStep> DiskQueue;
 	queue<ProcessStep> InputQueue;
 
+	int _ProcessesLeft[10];
+
+	for (int i = 0; i < 10; i++)
+	{
+		_ProcessesLeft[i] = 99;
+	}
+
 	//InputQueue.push_back(queue<ProcessStep>());
 	//InputQueue[0].push
 	//Queues.push_back(queue<ProcessStep>());
@@ -477,6 +505,7 @@ int main()
 		{
 			numberOfProcesses++;
 			_ProcessTable[numberOfProcesses].addName(_FileContents[i].Time);
+			_ProcessesLeft[numberOfProcesses] = numberOfProcesses;
 		}
 		/// only if its START
 		else if (_FileContents[i].Command == "START")
@@ -504,38 +533,39 @@ int main()
 
 	executeCommand(firstProcessLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 
-	int processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	int processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue,_ProcessesLeft);
 
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 	
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue, _ProcessesLeft);
 
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
-	//executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	//completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+
 
 
 	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
 
-	
 	//cout << "incomplete process " << firstProcessLocation << " with " << _ProcessTable[firstProcessLocation].isCommandComplete;
 
 	//int currentTime = minimumTime; //#2
