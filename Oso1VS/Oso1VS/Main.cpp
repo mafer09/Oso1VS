@@ -335,6 +335,22 @@ void executeCommand(int processLocation, Process processTable[], bool systemComp
 			CurrentProcess.updateComponentInUse(LocationOfComponent); // save the component being used
 		}
 	}
+	else if (CommandToExecute == "I/O")
+	{
+		LocationOfComponent = checkComponentAvailability(systemComponents, 4);
+		if (LocationOfComponent == -3) //Disk is busy
+		{
+			cout << "trying to access busy disks";
+		}
+		else //disk is free
+		{
+			CurrentProcess.updateTimer(msToExecute); //update timer
+			systemComponents[LocationOfComponent] = true; //update component state
+			systemComponentsAvailability[LocationOfComponent] = CurrentProcess._Timer;
+			CurrentProcess.setCommandCompleteness(false); //set that command isnt finilized
+			CurrentProcess.updateComponentInUse(LocationOfComponent); //save the component being used
+		}
+	}
 
 	processTable[processLocation] = CurrentProcess;
 
@@ -390,17 +406,34 @@ void completedProcess(int numberOfPRocesses, Process processTable[], bool system
 	vector<int> allExecutionTimes;
 	ProcessStep temoraryStep;
 
-	for (int i = 0; i <= numberOfPRocesses; i++)
-	{
-		allExecutionTimes.push_back(processTable[i]._Timer);
+	int processesLeftCounter = 0;
+	int lastProcess = -1;
 
-		if (processTable[i]._Timer <= lowestExecutionTime)
+	for (int i = 0; i < 10; i++)
+	{
+		if (processesLeft[i] != 99)
+		{
+			processesLeftCounter++;
+			lastProcess = processesLeft[i];
+		}
+	}
+	if (processesLeftCounter == 1)
+	{
+		lowestProcessLocation = lastProcess;
+	}
+	else
+	{
+		for (int i = 0; i <= numberOfPRocesses; i++)
+		{
+			allExecutionTimes.push_back(processTable[i]._Timer);
+
+			if (processTable[i]._Timer <= lowestExecutionTime)
 			{
 				lowestExecutionTime = processTable[i]._Timer;
 				lowestProcessLocation = i;
 			}
+		}
 	}
-
 	component = processTable[lowestProcessLocation]._ComponentInUse; //Get the component its was working with
 	currentPriori = processTable[lowestProcessLocation]._currentPriori;
 	if (component < -1)
@@ -552,15 +585,30 @@ int main()
 	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue);
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue, _ProcessesLeft);
+	//Process 1 Terminates
 
 	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+	//cpu is executed
 
 	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
+
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
+	//processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	//executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	//completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+	//processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	//executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	//completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+	//processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	//executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	//completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
 
 
