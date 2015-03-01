@@ -187,10 +187,12 @@ vector<ProcessStep> retrieveData()
 
 	return fileContents;
 };
-int findLowestExecutionTime(int totalProcesses, Process processTable[])
+int findLowestExecutionTime(int totalProcesses, Process processTable[], bool Cores[], int CoresAvailability[], bool DandI[], int DandIAvailability[])
 {
 	int lowestExecutionTime = processTable[0]._Timer;
 	int nextProcessLocation = -1;
+	string command = "";
+	int currentPriori = -1;
 	for (int i = 0; i <= totalProcesses; i++)
 	{
 		if (processTable[i]._Timer <= lowestExecutionTime)
@@ -199,6 +201,41 @@ int findLowestExecutionTime(int totalProcesses, Process processTable[])
 			nextProcessLocation = i;
 		}
 	}
+	if (processTable[nextProcessLocation]._Status != "Terminated")
+	{
+		currentPriori = processTable[nextProcessLocation]._currentPriori;
+		command = processTable[nextProcessLocation]._Priori[currentPriori].Command;
+
+		if (command == "CPU" || command == "ReadyQueue")
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				if (CoresAvailability[i] == lowestExecutionTime)
+				{
+					Cores[i] = false;
+				}
+			}
+		}
+		else if (command == "I/O" || command == "DiskQueue")
+		{
+			if (DandIAvailability[0] == lowestExecutionTime)
+			{
+				DandI[0] = false;
+			}
+		}
+		else if (command == "INPUT" || command == "InputQueue")
+		{
+			if (DandIAvailability[1] == lowestExecutionTime)
+			{
+				DandI[1] = false;
+			}
+		}
+		else
+		{
+			cout << "Error: check findlowestexecution time function";
+		}
+	}
+
 	return nextProcessLocation;
 };
 bool isProcessTerminated(Process processTable[],int currentProcess)
@@ -212,6 +249,8 @@ bool isProcessTerminated(Process processTable[],int currentProcess)
 		return false;
 	}
 };
+
+
 void printReport(int currentProcessPosition, int totalProcesses, Process processTable[], bool Cores[], int CoresAvailability[], 
 	bool DI[], int DIAvailability[], queue<ProcessStep> ReadyQ, queue<ProcessStep> DiskQ, queue<ProcessStep> InputQ)
 {
@@ -284,7 +323,7 @@ void executeProcess(int processLocation, Process processTable[], int totalProces
 	{
 		availableResult = checkComponentAvailability(DI[0]); // check if component is free or busy
 		processTable[processLocation].updateStatus(2); // update status to waiting
-		executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
+
 
 		if (availableResult == -3) // component is busy
 		{
@@ -294,6 +333,7 @@ void executeProcess(int processLocation, Process processTable[], int totalProces
 		}
 		else //component is free
 		{
+			executionTime = processTable[processLocation]._Priori[prioriPosition].Time;
 			DI[0] = true;
 			DIAvailability[0] += executionTime;	//make disk busy and how long
 			processTable[processLocation].updateTimer(executionTime); // add onto process timer
@@ -326,6 +366,7 @@ void executeProcess(int processLocation, Process processTable[], int totalProces
 		{
 			temporaryStep = ReadyQ.front();
 			ReadyQ.pop();
+			//FIX THIS LATER
 		}
 
 	}
@@ -341,6 +382,7 @@ void executeProcess(int processLocation, Process processTable[], int totalProces
 			DI[0] = true;
 			DIAvailability[0] += executionTime;	//make disk busy and how long
 			processTable[processLocation].updateTimer(executionTime); // add onto process timer
+			processTable[processLocation]._Priori[prioriPosition].Command = "DISK";
 		}
 	}
 	else if (component == "InputQueue")
@@ -355,13 +397,18 @@ void executeProcess(int processLocation, Process processTable[], int totalProces
 			DI[1] = true; // make input busy and how long
 			DIAvailability[1] += executionTime;
 			processTable[processLocation].updateTimer(executionTime);
+			processTable[processLocation]._Priori[prioriPosition].Command = "INPUT";
 		}
 	}
 	else 
 	{
 		cout << "Error: executeProcess function";
 	}
-	processTable[processLocation].updateCurrentPriori(1);
+	if (processTable[processLocation]._Priori[prioriPosition].Command == "CPU" || processTable[processLocation]._Priori[prioriPosition].Command == "I/O" 
+		|| processTable[processLocation]._Priori[prioriPosition].Command == "INPUT")
+	{
+		processTable[processLocation].updateCurrentPriori(1);
+	}
 
 	if (prioriPosition == totalLines) // check that the process hasnt terminated
 	{
@@ -415,23 +462,23 @@ int main()
 	// simulation
 	for (int j = 0; j < totalExecutableLines; j++)
 	{
-		nextProcess = findLowestExecutionTime(processNumber, processTable);
+		nextProcess = findLowestExecutionTime(processNumber, processTable, Cores, CoresAvailability, DandI, DandIAvailability);
 		
 		int currentPriori = processTable[nextProcess]._currentPriori;
 		if (isProcessTerminated(processTable, nextProcess) == true)
 		{ 
-			printReport(nextProcess, processNumber, processTable, Cores, CoresAvailability, DandI, DandIAvailability,
-				ReadyQueue, DiskQueue, InputQueue);
+			printReport(nextProcess, processNumber, processTable, Cores, CoresAvailability, DandI, DandIAvailability,ReadyQueue, DiskQueue, InputQueue);
 		}
 		else
 		{
+			//setComponentIdle(Cores, CoresAvailability, DandI, DandIAvailability, processTable[nextProcess]._Timer, processTable[nextProcess]._Priori[currentPriori].Command);
+			executeProcess(nextProcess, processTable, processNumber, Cores, CoresAvailability,DandI, DandIAvailability, ReadyQueue, DiskQueue, InputQueue);
+
 			/*if (processTable[nextProcess]._Priori[currentPriori].Command == "I/O" &&
-				processTable[nextProcess]._Priori[currentPriori].Time == 0)// go to the next process
+			processTable[nextProcess]._Priori[currentPriori].Time == 0)// go to the next process
 			{
-				processTable[nextProcess].updateCurrentPriori(1);
+			processTable[nextProcess].updateCurrentPriori(1);
 			}*/
-			executeProcess(nextProcess, processTable, processNumber, Cores, CoresAvailability,
-				DandI, DandIAvailability, ReadyQueue, DiskQueue, InputQueue);
 		}
 	}
 
