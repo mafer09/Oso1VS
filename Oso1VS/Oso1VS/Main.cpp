@@ -17,21 +17,22 @@ class Process
 {
 public:
 
-	int _Name;
-	vector<ProcessStep> _Priori;
+	int _Name; //Before
+	vector<ProcessStep> _Priori; //Before
 	int _currentPriori;
-	int _Start;
-	int _Timer;
-	string _Status; /// 1: Running, 2: Waiting, 0: Terminated 3:Ready
+	int _Start; //Before
+	int _Timer; //Before and updated
+	string _Status; /// 1: Running, 2: Waiting, 0: Terminated 3:Ready -1: starting
 	int _CPUtime;
+	int _inCPU;
 	
 	Process();
 	void addProcessStep(ProcessStep data);
 	void addName(int name);
 	void updateTimer(int time);
 	void setTimer(int time);
-	void updateCPUtime(int time);
-	void updateStatus(int status);
+	void updateCPU(int cpu, int time);
+	void setStatus(int status);
 	void updateCurrentPriori(int time);
 	string getStatus();
 
@@ -44,7 +45,10 @@ Process::Process()
 	_currentPriori = 0;
 	_Name = 0;
 	_Status = "";
+	_inCPU = 0;
 }
+
+// Process Functions
 void Process::addProcessStep(ProcessStep data)
 {
 	_Priori.push_back(data);
@@ -62,11 +66,12 @@ void Process::setTimer(int time)
 	_Start = time;
 	_Timer = time;
 }
-void Process::updateCPUtime(int time)
+void Process::updateCPU(int cpu,int time)
 {
 	_CPUtime += time;
+	_inCPU = cpu;
 }
-void Process::updateStatus(int status)
+void Process::setStatus(int status)
 {
 	switch (status)
 	{
@@ -101,33 +106,32 @@ int checkCoreAvailability( bool Cores[], int CoresAvailability[])
 {
 	vector<int> freeCores;
 	int locationOfFreeCore = -1;
-	int lowestTime = 20000;
+	int lowestExecutionTime = 20000;
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++) //place free cores in the freeCoresVector
 	{
 		if (Cores[i] == false)
 		{
 			freeCores.push_back(i);
 		}
 	}
+	
 	if (freeCores.empty()) // Return if the there are no free cores
 	{
 		return -3;
 	}
 	else
 	{
-		for (int i = 0; i < freeCores.size(); i++)
+		for (int i = 0; i < freeCores.size(); i++) //go though the stored free cores
 		{
-
-			if (CoresAvailability[freeCores[i]] < lowestTime)
+			if (CoresAvailability[freeCores[i]] < lowestExecutionTime) //return the ones with the lowestexcutiontime
 			{
-				lowestTime = CoresAvailability[i];
+				lowestExecutionTime = CoresAvailability[i];
 				locationOfFreeCore = freeCores[i];
 			}
 		}
-		return locationOfFreeCore;
+		return locationOfFreeCore; //send back the location of the free core in the array
 	}
-
 };
 int checkComponentAvailability(bool component)
 {
@@ -151,7 +155,6 @@ string determineState(bool state)
 		return "IDLE";
 	}
 };
-
 
 vector<ProcessStep> retrieveData()
 {
@@ -187,6 +190,7 @@ vector<ProcessStep> retrieveData()
 
 	return fileContents;
 };
+/*
 int findLowestExecutionTime(int totalProcesses, Process processTable[], bool Cores[], int CoresAvailability[], bool DandI[], int DandIAvailability[])
 {
 	int lowestExecutionTime = processTable[0]._Timer;
@@ -249,10 +253,7 @@ bool isProcessTerminated(Process processTable[],int currentProcess)
 		return false;
 	}
 };
-
-
-void printReport(int currentProcessPosition, int totalProcesses, Process processTable[], bool Cores[], int CoresAvailability[], 
-	bool DI[], int DIAvailability[], queue<ProcessStep> ReadyQ, queue<ProcessStep> DiskQ, queue<ProcessStep> InputQ)
+void printReport(int currentProcessPosition, int totalProcesses, Process processTable[], bool Cores[], int CoresAvailability[], bool DI[], int DIAvailability[], queue<ProcessStep> ReadyQ, queue<ProcessStep> DiskQ, queue<ProcessStep> InputQ)
 {
 	int coreNumber = 1;
 	int totalCores = 0;
@@ -270,7 +271,7 @@ void printReport(int currentProcessPosition, int totalProcesses, Process process
 	/*cout << "Ready Queue contains: " << components.determineState(components.ReadyQueue.empty()) << "\n";
 	cout << "Disk Queue contains: " << components.determineState(components.DiskQueue.empty()) << "\n";
 	cout << "Input Queue contains: " << components.determineState(components.InputQueue.empty()) << "\n\n";
-	*/
+	
 	cout << "Process ID  | Start Time | CPU Time   |  Status" << "\n";
 	for (int i = 0; i <= totalProcesses; i++)
 	{
@@ -283,8 +284,7 @@ void printReport(int currentProcessPosition, int totalProcesses, Process process
 	}
 	cout << "Average number of BUSY Cores: " << totalCores / processTable[currentProcessPosition]._Timer << "\n";
 };
-void executeProcess(int processLocation, Process processTable[], int totalProcesses, 
-	bool Cores[], int CoresAvailability[], bool DI[], int DIAvailability[], queue<ProcessStep> ReadyQ, queue<ProcessStep> DiskQ, queue<ProcessStep> InputQ)
+void executeProcess(int processLocation, Process processTable[], int totalProcesses, bool Cores[], int CoresAvailability[], bool DI[], int DIAvailability[], queue<ProcessStep> ReadyQ, queue<ProcessStep> DiskQ, queue<ProcessStep> InputQ)
 {
 	int availableResult = -1;
 	int executionTime = -1;
@@ -416,54 +416,117 @@ void executeProcess(int processLocation, Process processTable[], int totalProces
 	}
 
 };
+*/
 
+void executeCommand(int processLocation, Process processTable[], bool systemComponents[], int systemComponentsAvailability[])
+{
+	Process CurrentProcess = processTable[processLocation];
+	int LineNumToExecute = CurrentProcess._currentPriori;
+	string CommandToExecute = CurrentProcess._Priori[LineNumToExecute].Command;
+	int msToExecute = CurrentProcess._Priori[LineNumToExecute].Time;
+	int LocationOfCore = -1;
+
+	if (CommandToExecute == "CPU")
+	{
+		LocationOfCore = checkCoreAvailability(systemComponents, systemComponentsAvailability);
+		
+		if (LocationOfCore == -3)// all cores are busy
+		{
+			cout << CommandToExecute << "is trying to go into the REAdyQUEUe"<<endl;
+			cout << " this is the processID : "<<CurrentProcess._Name<<endl;
+		}
+		else //there is a core free
+		{
+			CurrentProcess.setStatus(1); //set status to running
+			CurrentProcess.updateTimer(msToExecute);
+			CurrentProcess.updateCPU(LocationOfCore, msToExecute);
+			systemComponents[LocationOfCore] = true;
+			systemComponentsAvailability[LocationOfCore] = msToExecute;
+		}
+	}
+
+	cout << "processing process #: " << CurrentProcess._Name << endl;
+	cout << "doing command: " << CommandToExecute << endl;
+	cout << "it will take to execute: " << msToExecute << " ms" << endl;
+	cout << "with component " << LocationOfCore<<endl;
+};
 
 int main()
 {
-	vector<ProcessStep> fileContents = retrieveData();
-	Process processTable[10]; //**MAY NEED TO BE CHANGED
-	
-	int processNumber = -1;
+	vector<ProcessStep> _FileContents = retrieveData();
+	Process _ProcessTable[10]; 
+
+	int numberOfProcesses = -1;
 	int totalExecutableLines = 0;
-	int nextProcess = -1;
-	
+	//int nextProcess = -1;
+	//int globalTimer = 0;
+
 	//SYSTEM Components
-	bool Cores[4] = { false }; //false = idle || true = busy
+	bool _SystemComponents[6] = { false }; //0: CPU1 |1: CPU2 |2: CPU3 |3: CPU4 ||4: Disk |5:Input 
+	int _SystemComponentsAvailability[6] = { 0 };
+	/*bool Cores[4] = { false }; //false = idle || true = busy
 	bool DandI[2] = { false }; //0: disk 1: input
 	int CoresAvailability[4] = { 0 };
 	int DandIAvailability[2] = { 0 };
 	queue<ProcessStep> ReadyQueue;
 	queue<ProcessStep> DiskQueue;
-	queue<ProcessStep> InputQueue;
+	queue<ProcessStep> InputQueue;*/
 
 	///Parses the data == Creates proceess table
-	for (int i = 0; i < fileContents.size(); i++)
+	for (int i = 0; i < _FileContents.size(); i++)
 	{
 		/// only if its NEW
-		if (fileContents[i].Command == "NEW")
+		if (_FileContents[i].Command == "NEW")
 		{
-			processNumber++;
-			processTable[processNumber].addName(fileContents[i].Time);
+			numberOfProcesses++;
+			_ProcessTable[numberOfProcesses].addName(_FileContents[i].Time);
 		}
 		/// only if its START
-		else if (fileContents[i].Command == "START")
+		else if (_FileContents[i].Command == "START")
 		{
-			processTable[processNumber].setTimer(fileContents[i].Time);
+			_ProcessTable[numberOfProcesses].setTimer(_FileContents[i].Time);
 		}
 		/// everyone else
-		else		
+		else
 		{
-			processTable[processNumber].addProcessStep(fileContents[i]);
+			_ProcessTable[numberOfProcesses].addProcessStep(_FileContents[i]);
 			totalExecutableLines++;
 		}
 	}
 
+	int minimumTime = 20000; //to make sure it gets process with the smallest amount of time
+	int firstProcessLocation = -1;
+	for (int i = 0; i <= numberOfProcesses; i++)
+	{
+		if (_ProcessTable[i]._Start < minimumTime)
+		{
+			minimumTime = _ProcessTable[i]._Start;
+			firstProcessLocation = i;
+		}
+	}
 
+	int currentTime = minimumTime;
+	executeCommand(firstProcessLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability);
+	
+
+	/*//who starts the simulation
+	int minimumTime = 20000;
+	int tempPRocess = -1;
+	for (int i = 0; i <= processNumber; i++)
+	{
+		if (processTable[i]._Start < minimumTime)
+		{
+			minimumTime = processTable[i]._Start;
+			tempPRocess = i;
+		}
+	}
+	*/
+	/*
 	// simulation
 	for (int j = 0; j < totalExecutableLines; j++)
 	{
 		nextProcess = findLowestExecutionTime(processNumber, processTable, Cores, CoresAvailability, DandI, DandIAvailability);
-		
+
 		int currentPriori = processTable[nextProcess]._currentPriori;
 		if (isProcessTerminated(processTable, nextProcess) == true)
 		{ 
@@ -478,9 +541,9 @@ int main()
 			processTable[nextProcess]._Priori[currentPriori].Time == 0)// go to the next process
 			{
 			processTable[nextProcess].updateCurrentPriori(1);
-			}*/
+			}
 		}
-	}
+	}*/
 
 
 	system("pause"); //**TAKE SYSTEM PAUSE OUT!
