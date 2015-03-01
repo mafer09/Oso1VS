@@ -24,7 +24,7 @@ public:
 	int _Timer; //Before and updated
 	string _Status; /// 1: Running, 2: Waiting, 0: Terminated 3:Ready -1: starting
 	int _CPUtime;
-	int _inCPU;
+	int _ComponentInUse;
 	bool isCommandComplete;
 	
 	Process();
@@ -47,7 +47,7 @@ Process::Process()
 	_currentPriori = 0;
 	_Name = 0;
 	_Status = "";
-	_inCPU = 0;
+	_ComponentInUse = 0;
 	isCommandComplete = true;
 }
 
@@ -72,7 +72,7 @@ void Process::setTimer(int time)
 void Process::updateCPU(int cpu,int time)
 {
 	_CPUtime += time;
-	_inCPU = cpu;
+	_ComponentInUse = cpu;
 }
 void Process::setStatus(int status)
 {
@@ -141,15 +141,15 @@ int checkCoreAvailability( bool Cores[], int CoresAvailability[])
 	}
 	//**POSSIBLE issue with core assignment
 };
-int checkComponentAvailability(bool component)
+int checkComponentAvailability(bool Components[], int location)
 {
-	if (component == true)
+	if (Components[location] == true)
 	{
 		return -3;
 	}
 	else
 	{
-		return 0;
+		return location;
 	}
 };
 string determineState(bool state)
@@ -233,13 +233,13 @@ void executeCommand(int processLocation, Process processTable[], bool systemComp
 	int LineNumToExecute = CurrentProcess._currentPriori;
 	string CommandToExecute = CurrentProcess._Priori[LineNumToExecute].Command;
 	int msToExecute = CurrentProcess._Priori[LineNumToExecute].Time;
-	int LocationOfCore = -1;
+	int LocationOfComponent = -1;
 
 	if (CommandToExecute == "CPU")
 	{
-		LocationOfCore = checkCoreAvailability(systemComponents, systemComponentsAvailability);
+		LocationOfComponent = checkCoreAvailability(systemComponents, systemComponentsAvailability);
 		
-		if (LocationOfCore == -3)// all cores are busy
+		if (LocationOfComponent == -3)// all cores are busy
 		{
 			cout << CommandToExecute << "is trying to go into the REAdyQUEUe"<<endl;
 			cout << " this is the processID : "<<CurrentProcess._Name<<endl;
@@ -247,22 +247,42 @@ void executeCommand(int processLocation, Process processTable[], bool systemComp
 		else //there is a core free
 		{
 			CurrentProcess.setStatus(1); //set status to running
-			CurrentProcess.updateTimer(msToExecute);
-			CurrentProcess.updateCPU(LocationOfCore, msToExecute);
-			systemComponents[LocationOfCore] = true;
-			systemComponentsAvailability[LocationOfCore] = msToExecute;
-			CurrentProcess.setCommandCompleteness(false);
+			CurrentProcess.updateTimer(msToExecute); //update timer
+			CurrentProcess.updateCPU(LocationOfComponent, msToExecute); //update cpu counter
+			systemComponents[LocationOfComponent] = true; //update component state
+			systemComponentsAvailability[LocationOfComponent] = msToExecute; //update component timer
+			CurrentProcess.setCommandCompleteness(false); // set if the command is finilized
 		}
 	}
+
+	else if (CommandToExecute == "INPUT")
+	{
+		LocationOfComponent = checkComponentAvailability(systemComponents, 5);
+
+		if (LocationOfComponent == -3) //input is busy
+		{
+			cout << CommandToExecute << "is trying to go into the InputQUEUe" << endl;
+			cout << " this is the processID : " << CurrentProcess._Name << endl;
+		}
+		else // input is free
+		{
+			CurrentProcess.setStatus(2); // set status to waiting
+			CurrentProcess.updateTimer(msToExecute); //update timer
+			systemComponents[LocationOfComponent] = true; //update component state
+			systemComponentsAvailability[LocationOfComponent] = msToExecute; //update component timer
+			CurrentProcess.setCommandCompleteness(false); //set if command is finilized
+		}
+	}
+
 	processTable[processLocation] = CurrentProcess;
 
-	/*cout << "processing process #: " << CurrentProcess._Name << endl;
+	cout << "processing process #: " << CurrentProcess._Name << endl;
 	cout << "doing command: " << CommandToExecute << endl;
 	cout << "it will take to execute: " << msToExecute << " ms" << endl;
-	cout << "with CPU " << LocationOfCore<<endl;
-	cout << "The timer is " << CurrentProcess._Timer << endl;*/
+	cout << "with CPU " << LocationOfComponent << endl;
+	cout << "The timer is " << CurrentProcess._Timer << endl;
 };
-int lowestProcess(int numberOfPRocesses, Process processTable[])
+void completedProcess(int numberOfPRocesses, Process processTable[], bool systemComponents[])
 {
 	int lowestExecutionTime = processTable[0]._Timer;
 	int lowestProcessLocation = -1;
@@ -274,8 +294,16 @@ int lowestProcess(int numberOfPRocesses, Process processTable[])
 			lowestProcessLocation = i;
 		}
 	}
-	return lowestProcessLocation;
+
+	int component = processTable[lowestProcessLocation]._ComponentInUse;
+	systemComponents[component] = false;
+	processTable[lowestProcessLocation].setCommandCompleteness(true);
+	processTable[lowestProcessLocation].updateCurrentPriori(1);
+
+	//cout << "component is " << component << " status" << systemComponents[component]<<endl;
+	//cout << "process location " << lowestProcessLocation << " priori " << processTable[lowestProcessLocation]._currentPriori <<endl;
 };
+
 
 int main()
 {
@@ -334,6 +362,12 @@ int main()
 	executeCommand(firstProcessLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability);
 
 	int processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents);
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+
+	//cout << "up next process # " << processLocation << " with " << _ProcessTable[processLocation].isCommandComplete << endl;
 
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability);
 
@@ -345,10 +379,7 @@ int main()
 
 
 
-
-
-
-	//cout << "up next process # " << processLocation << " with " << _ProcessTable[processLocation].isCommandComplete << endl;
+	
 	//cout << "incomplete process " << firstProcessLocation << " with " << _ProcessTable[firstProcessLocation].isCommandComplete;
 
 	//int currentTime = minimumTime; //#2
