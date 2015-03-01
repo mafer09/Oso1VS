@@ -226,10 +226,27 @@ void hasProcessTerminated(int totalProcesses, Process processTable[])
 	}
 };
 
+void terminatedReplications(int numberOfProcesses, Process processTable[], int terminatedProcess, bool SystemComponents[])
+{
+	int component = -1;
+	for (int i = 0; i <= numberOfProcesses; i++)
+	{
+		if (processTable[i]._Name != processTable[terminatedProcess]._Name && processTable[i]._Status != "Terminated")
+		{
+			component = processTable[i]._ComponentInUse;
+			SystemComponents[component] = false;  //set component to idle
+			//** Fix this if the component is any of the queues
+			processTable[i].setCommandCompleteness(true);
+			processTable[i].updateCurrentPriori(1);
+		}
+	}
+};
+
 int findNextCommand(int numberOfProcesses, Process processTable[])
 {
 	int minimumTime = 20000;
 	int processPosition = -1;
+
 	for (int i = 0; i <= numberOfProcesses; i++)
 	{
 		if (processTable[i].isCommandComplete == true && processTable[i]._Status != "Terminated")
@@ -341,7 +358,7 @@ void printReport(Process terminatedProcess, Process processTable[], int totalPro
 		totalCPUTime += processTable[i]._CPUtime;
 	}
 
-	cout << "Average number of BUSY Cores: " << totalCPUTime / terminatedProcess._Timer << "\n";
+	cout << "Average number of BUSY Cores: " << totalCPUTime / terminatedProcess._Timer <<endl<<endl;
 };
 
 void completedProcess(int numberOfPRocesses, Process processTable[], bool systemComponents[], int systemComponentAvailability[], const queue<ProcessStep>& ReadyQueue, const queue<ProcessStep>& DiskQueue, queue<ProcessStep>& InputQueue)
@@ -412,6 +429,8 @@ void completedProcess(int numberOfPRocesses, Process processTable[], bool system
 		{
 			processTable[lowestProcessLocation].setStatus(0);
 			printReport(processTable[lowestProcessLocation], processTable, numberOfPRocesses, systemComponents, systemComponentAvailability);
+			cout << "completed process was " << lowestProcessLocation<<endl;
+			terminatedReplications(numberOfPRocesses, processTable, lowestProcessLocation, systemComponents);
 		}
 
 	}
@@ -502,15 +521,19 @@ int main()
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 
 	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
-	//cout << "up next process # " << processLocation << " command is = 0 isnot =1 .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
-
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue);
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue);
 
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 
-	
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable);
+	//executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	//completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 
 
+	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
 
 	
 	//cout << "incomplete process " << firstProcessLocation << " with " << _ProcessTable[firstProcessLocation].isCommandComplete;
