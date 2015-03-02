@@ -49,7 +49,7 @@ Process::Process()
 	_currentPriori = 0;
 	_Name = 0;
 	_Status = "";
-	_ComponentInUse = 0;
+	_ComponentInUse = 204;
 	isCommandComplete = true;
 }
 
@@ -183,7 +183,7 @@ vector<ProcessStep> retrieveData()
 	ProcessStep line;
 	int numberOfLines = 0;
 
-	inputTxt.open("input1.txt.txt");
+	inputTxt.open("input12.txt.txt");
 
 	if (!inputTxt.is_open())
 	{
@@ -521,10 +521,16 @@ void completedProcess(int numberOfPRocesses, Process processTable[], bool system
 	}
 	else
 	{
-		systemComponents[component] = false; //set the component to idle
-		processTable[lowestProcessLocation].setCommandCompleteness(true); //set the command is complete
-		processTable[lowestProcessLocation].updateCurrentPriori(1);
-
+		if (component == 204)
+		{
+			//Do nothing
+		}
+		else
+		{
+			systemComponents[component] = false; //set the component to idle
+			processTable[lowestProcessLocation].setCommandCompleteness(true); //set the command is complete
+			processTable[lowestProcessLocation].updateCurrentPriori(1);
+		}
 		int totalLines = processTable[lowestProcessLocation]._Priori.size(); //get the totalnumber of executable lines in the process
 		totalLines--; 
 
@@ -540,7 +546,7 @@ void completedProcess(int numberOfPRocesses, Process processTable[], bool system
 
 	}
 
-	cout << "component that was in use " << component << "is now " << systemComponents[component]<<endl;
+	cout << "component that was in use " << component << "(ignore 204) is now " << systemComponents[component]<<endl;
 	cout << "lowest process is " << lowestProcessLocation << "with priori " << processTable[lowestProcessLocation]._currentPriori <<endl;
 };
 
@@ -603,20 +609,31 @@ int main()
 
 	executeCommand(firstProcessLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 
-	for (int i = 0; i < totalExecutableLines; i++)
+	int processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+	
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+
+	/*for (int i = 0; i < totalExecutableLines; i++)
 	{
 		int processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 		executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 		completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
-	}
+	}*/
 
-	/*int processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
-	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue,_ProcessesLeft);
+	/*
+	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
 
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
-	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
 	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
