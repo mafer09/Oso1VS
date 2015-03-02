@@ -609,6 +609,8 @@ int main()
 
 	executeCommand(firstProcessLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 
+
+
 	int processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
@@ -623,6 +625,46 @@ int main()
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue, _ProcessesLeft);
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
+	
+	//executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	//completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
+
+
+
+
+
+
+
+
 
 	/*for (int i = 0; i < totalExecutableLines; i++)
 	{
@@ -633,35 +675,11 @@ int main()
 
 	/*
 	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
-
-
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
-	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
-	
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
-	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
-
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
-	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, InputQueue, DiskQueue, _ProcessesLeft);
-	//Process 1 Terminates
-
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
-	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
-	//cpu is executed
-
-	
 	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
 	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 	// i/o is executed
 
-	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
-	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
-	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 	*/
 	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
 
