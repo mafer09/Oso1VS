@@ -335,12 +335,27 @@ void executeCommand(int processLocation, Process processTable[], bool systemComp
 
 		if (LocationOfComponent == -3) //input is busy
 		{
-			CurrentProcess.QueueTimeChange(systemComponentsAvailability[5]); //set the timer of the process the same as the time the process will execute
-			temporaryStep = CurrentProcess._Priori[LineNumToExecute]; 
-			InputQueue.push(temporaryStep);//push prioristep into the queue 
-			CommandToExecute = "InputQueue"; //change the command to be in inputqueue
-			CurrentProcess.setCommandCompleteness(false); //set that command is finilized
-			CurrentProcess.updateComponentInUse(-6); // save the component being used
+			if (InputQueue.empty() == true)
+			{
+				CurrentProcess.QueueTimeChange(systemComponentsAvailability[5]); //set the timer of the process the same as the time the process will execute
+				temporaryStep = CurrentProcess._Priori[LineNumToExecute];
+				temporaryStep.Time = systemComponentsAvailability[5];
+				InputQueue.push(temporaryStep);//push prioristep into the queue 
+				CommandToExecute = "InputQueue"; //change the command to be in inputqueue
+				CurrentProcess.setCommandCompleteness(false); //set that command is finilized
+				CurrentProcess.updateComponentInUse(-6); // save the component being used
+			}
+			else
+			{
+				//queue<ProcessStep> IQ = InputQueue;
+				CurrentProcess.QueueTimeChange(InputQueue.front().Time);
+				cout << InputQueue.front().Time << endl;
+				temporaryStep = CurrentProcess._Priori[LineNumToExecute];
+				InputQueue.push(temporaryStep);//push prioristep into the queue 
+				CommandToExecute = "InputQueue"; //change the command to be in inputqueue
+				CurrentProcess.setCommandCompleteness(false); //set that command is finilized
+				CurrentProcess.updateComponentInUse(-6); // save the component being used
+			}
 		}
 		else // input is free
 		{
@@ -358,12 +373,26 @@ void executeCommand(int processLocation, Process processTable[], bool systemComp
 
 		if (LocationOfComponent == -3) //Disk is busy
 		{
-			CurrentProcess.QueueTimeChange(systemComponentsAvailability[4]); 
-			temporaryStep = CurrentProcess._Priori[LineNumToExecute];
-			DiskQueue.push(temporaryStep);
-			CommandToExecute = "DiskQueue";
-			CurrentProcess.setCommandCompleteness(false);
-			CurrentProcess.updateComponentInUse(-5);
+			if (DiskQueue.empty() == true)
+			{
+				CurrentProcess.QueueTimeChange(systemComponentsAvailability[4]);
+				temporaryStep = CurrentProcess._Priori[LineNumToExecute];
+				temporaryStep.Time = systemComponentsAvailability[4];
+				DiskQueue.push(temporaryStep);
+				CommandToExecute = "DiskQueue";
+				CurrentProcess.setCommandCompleteness(false);
+				CurrentProcess.updateComponentInUse(-5);
+			}
+			else
+			{
+				//queue<ProcessStep> DQ = DiskQueue;
+				CurrentProcess.QueueTimeChange(DiskQueue.front().Time);
+				temporaryStep = CurrentProcess._Priori[LineNumToExecute];
+				DiskQueue.push(temporaryStep);
+				CommandToExecute = "DiskQueue";
+				CurrentProcess.setCommandCompleteness(false);
+				CurrentProcess.updateComponentInUse(-5);
+			}
 
 		}
 		else //disk is free
@@ -654,8 +683,9 @@ int main()
 	completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
 	processLocation = findNextCommand(numberOfProcesses, _ProcessTable, _ProcessesLeft);
-	
-	//executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
+	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
+
+	executeCommand(processLocation, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue);
 	//completedProcess(numberOfProcesses, _ProcessTable, _SystemComponents, _SystemComponentsAvailability, ReadyQueue, DiskQueue, InputQueue, _ProcessesLeft);
 
 
@@ -681,7 +711,6 @@ int main()
 	// i/o is executed
 
 	*/
-	//cout << "up next process # " << processLocation << " command (is = 0 isNOT =1) .." << _ProcessTable[processLocation].isCommandComplete << ".. complete" << endl;
 
 	system("pause"); //**TAKE SYSTEM PAUSE OUT!
 	return 0;
